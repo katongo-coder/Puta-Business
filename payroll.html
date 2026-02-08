@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selwa's Executive Payroll | Mobile-Ready</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --brand: #0f172a; --accent: #3b82f6; --success: #059669; --danger: #dc2626;
+            --bg: #f8fafc; --white: #ffffff; --border: #e2e8f0;
+        }
+
+        /* Responsive Global Styles */
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--brand); margin: 0; padding: 10px; }
+        .container { max-width: 1000px; margin: auto; padding: 10px; }
+
+        /* Dashboard Header */
+        .app-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; padding: 10px; 
+        }
+        .app-header h2 { font-size: 1.25rem; margin: 0; font-weight: 800; }
+
+        /* Responsive Grid System */
+        .glass-card {
+            background: var(--white); border-radius: 16px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .stat-grid { 
+            display: grid; grid-template-columns: repeat(1, 1fr); gap: 12px; margin-bottom: 20px; 
+        }
+        @media (min-width: 600px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .stat-box { 
+            background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center;
+            border: 1px solid transparent; transition: 0.3s;
+        }
+        .stat-box:hover { border-color: var(--accent); background: #fff; }
+        .stat-box label { display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-box span { font-size: 1.2rem; font-weight: 800; }
+
+        /* Responsive Form */
+        .control-row { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 768px) { .control-row { grid-template-columns: 2fr 1.5fr 1fr; align-items: flex-end; } }
+
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+        select, input { 
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+            font-size: 14px; box-sizing: border-box; 
+        }
+
+        .btn { 
+            cursor: pointer; border: none; border-radius: 8px; font-weight: 700; 
+            transition: 0.2s; font-size: 14px;
+        }
+        .btn-prime { background: var(--brand); color: white; padding: 12px; width: 100%; }
+        .btn-success { background: var(--success); color: white; padding: 15px; width: 100%; margin-top: 15px; display: none; }
+
+        /* THE PAYSLIP (A4 Fixed for Export, Scrollable for Mobile View) */
+        .scroll-wrapper { width: 100%; overflow-x: auto; margin-top: 20px; }
+        
+        #payslip-pdf {
+            width: 790px; background: white; padding: 40px; margin: auto;
+            display: none; position: relative; color: #000 !important;
+        }
+
+        .slip-top { border-bottom: 4px solid var(--brand); padding-bottom: 15px; margin-bottom: 20px; }
+        .badge-verified {
+            position: absolute; top: 40px; right: 40px; border: 2px solid var(--success);
+            color: var(--success); padding: 5px 15px; border-radius: 4px; font-weight: 900;
+            transform: rotate(5deg); font-size: 12px;
+        }
+
+        .table-split { width: 100%; border-collapse: collapse; }
+        .table-split th { background: #f8fafc; padding: 10px; text-align: left; font-size: 11px; border: 1px solid #e2e8f0; }
+        .table-split td { padding: 10px; border: 1px solid #e2e8f0; font-size: 12px; vertical-align: top; }
+
+        .net-payable-box { 
+            margin-top: 30px; margin-left: auto; width: 280px; 
+            background: var(--brand); color: white; padding: 20px; border-radius: 4px;
+        }
+
+        /* Hide UI during PDF generation */
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="container no-print">
+    <div class="app-header">
+        <h2>✂️ Selwa's Payroll</h2>
+        <span id="liveClock" style="font-size:12px; color:#64748b"></span>
+    </div>
+
+    <div class="glass-card">
+        <div class="stat-grid">
+            <div class="stat-box">
+                <label>Total Shop Income</label>
+                <span id="stat-income" style="color:var(--success)">K0.00</span>
+            </div>
+            <div class="stat-box">
+                <label>Total Deductions</label>
+                <span id="stat-expense" style="color:var(--danger)">K0.00</span>
+            </div>
+            <div class="stat-box" style="background:var(--brand); color:white">
+                <label style="color:#94a3b8">Net 30% Commission</label>
+                <span id="stat-net">K0.00</span>
+            </div>
+        </div>
+
+        <div class="control-row">
+            <div class="form-group">
+                <label>Facilitator</label>
+                <select id="staffSelect">
+                    <option value="PRINCE CHANSA">PRINCE CHANSA</option>
+                    <option value="FEWDAYS KALEMBWE">FEWDAYS KALEMBWE</option>
+                    <option value="DAVIES CHIBAWA">DAVIES CHIBAWA</option>
+                    <option value="RUEBEN KALILWA">RUEBEN KALILWA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Period</label>
+                <input type="month" id="monthSelect">
+            </div>
+            <button class="btn btn-prime" onclick="processPayroll()">Generate Report</button>
+        </div>
+    </div>
+</div>
+
+<div class="scroll-wrapper">
+    <div id="payslip-pdf">
+        <div class="badge-verified">VERIFIED RECORD</div>
+        
+        <div class="slip-top">
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <h1 style="margin:0; font-size:24px; letter-spacing:-1px">SELWA'S SMART BARBER</h1>
+                        <p style="font-size:11px; color:#64748b; margin:2px 0">PREMIUM GROOMING & BEAUTY SERVICES<br>Lusaka, Zambia • Head Office</p>
+                    </td>
+                    <td style="text-align:right">
+                        <small style="font-weight:bold; color:#64748b">OFFICIAL PAYSLIP</small><br>
+                        <strong id="pdf-period" style="font-size:18px"></strong>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <table style="width:100%; margin-bottom:20px; font-size:13px">
+            <tr>
+                <td width="33%"><label style="font-size:10px; color:#64748b">EMPLOYEE NAME</label><br><strong id="pdf-name"></strong></td>
+                <td width="33%"><label style="font-size:10px; color:#64748b">DESIGNATION</label><br><strong>Senior Barber</strong></td>
+                <td width="33%"><label style="font-size:10px; color:#64748b">PAYROLL ID</label><br><strong id="pdf-ref"></strong></td>
+            </tr>
+        </table>
+
+        <table class="table-split">
+            <thead>
+                <tr>
+                    <th width="15%">Date</th>
+                    <th>Earnings Detail</th>
+                    <th width="20%">Income (K)</th>
+                    <th width="20%">Exp/Ded (K)</th>
+                </tr>
+            </thead>
+            <tbody id="pdf-rows"></tbody>
+            <tfoot>
+                <tr style="background:#f1f5f9; font-weight:bold">
+                    <td colspan="2">TOTAL MONTHLY MOVEMENT</td>
+                    <td id="pdf-tot-inc">K0.00</td>
+                    <td id="pdf-tot-exp" style="color:var(--danger)">K0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="net-payable-box">
+            <table style="width:100%">
+                <tr>
+                    <td style="font-size:11px; opacity:0.8">NET SETTLEMENT AMOUNT<br><small>(30% of Net Revenue)</small></td>
+                    <td style="text-align:right; font-size:22px; font-weight:800" id="pdf-final-net">K0.00</td>
+                </tr>
+            </table>
+        </div>
+
+        <table style="width:100%; margin-top:60px">
+            <tr>
+                <td width="45%" style="border-top:1px solid #000; text-align:center; padding-top:10px; font-size:11px; font-weight:bold">Management Signature</td>
+                <td width="10%"></td>
+                <td width="45%" style="border-top:1px solid #000; text-align:center; padding-top:10px; font-size:11px; font-weight:bold">Employee Acknowledgment</td>
+            </tr>
+        </table>
+        
+        <p style="text-align:center; font-size:9px; color:#94a3b8; margin-top:40px">This is an encrypted digital record generated via Selwa's Barber Suite. Valid for bank presentation.</p>
+    </div>
+</div>
+
+<div class="container no-print">
+    <button id="dlBtn" class="btn btn-success" onclick="downloadPDF()">📥 Download Professional PDF Slip</button>
+</div>
+
+
+
+<script>
+    function processPayroll() {
+        const staff = document.getElementById('staffSelect').value;
+        const month = document.getElementById('monthSelect').value;
+        const records = JSON.parse(localStorage.getItem('barber_master_records')) || [];
+
+        const filtered = records.filter(r => r.customer === staff && r.date.startsWith(month));
+
+        if (filtered.length === 0) {
+            alert("⚠️ No records found for " + staff + " in " + month);
+            return;
+        }
+
+        let inc = 0, exp = 0;
+        const tbody = document.getElementById('pdf-rows');
+        tbody.innerHTML = '';
+
+        filtered.forEach(item => {
+            const isInc = item.category === 'income';
+            if(isInc) inc += item.amount; else exp += item.amount;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.date.split('-')[2]}/${item.date.split('-')[1]}</td>
+                    <td>${item.note}</td>
+                    <td>${isInc ? item.amount.toFixed(2) : '-'}</td>
+                    <td style="color:${!isInc ? '#dc2626': '#000'}">${!isInc ? item.amount.toFixed(2) : '-'}</td>
+                </tr>
+            `;
+        });
+
+        const net = (inc - exp) * 0.30;
+
+        // UI Update
+        document.getElementById('stat-income').innerText = `K${inc.toFixed(2)}`;
+        document.getElementById('stat-expense').innerText = `K${exp.toFixed(2)}`;
+        document.getElementById('stat-net').innerText = `K${net.toFixed(2)}`;
+
+        // PDF Update
+        document.getElementById('pdf-name').innerText = staff;
+        document.getElementById('pdf-period').innerText = month;
+        document.getElementById('pdf-ref').innerText = `WBS-${month.replace('-','')}-${staff.substring(0,3)}`;
+        document.getElementById('pdf-tot-inc').innerText = `K${inc.toFixed(2)}`;
+        document.getElementById('pdf-tot-exp').innerText = `K${exp.toFixed(2)}`;
+        document.getElementById('pdf-final-net').innerText = `K${net.toFixed(2)}`;
+
+        document.getElementById('payslip-pdf').style.display = 'block';
+        document.getElementById('dlBtn').style.display = 'block';
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('payslip-pdf');
+        const staff = document.getElementById('pdf-name').innerText;
+        
+        const opt = {
+            margin: 0.3,
+            filename: `Payslip_${staff}.pdf`,
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // Live Clock
+    setInterval(() => {
+        document.getElementById('liveClock').innerText = new Date().toLocaleString();
+    }, 1000);
+
+    window.onload = () => {
+        document.getElementById('monthSelect').value = new Date().toISOString().substring(0, 7);
+    };
+</script>
+
+</body>
+</html>

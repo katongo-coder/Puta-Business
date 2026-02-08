@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selwa's Smart Barber Shop | Master Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #fbbf24;
+            --bg: #f8fafc;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        /* Card System */
+        .card {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Form Styling */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #64748b; }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+        .btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-add { background: var(--accent); color: white; }
+        .btn-add:hover { background: #2563eb; }
+        
+        .btn-sync { background: var(--success); color: white; }
+        .btn-sync:hover { background: #059669; }
+        .btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Staff Salary Grid */
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .staff-card {
+            background: var(--primary);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            text-align: center;
+        }
+
+        .staff-card h4 { margin: 0; font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
+        .staff-card .wage { font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0; color: var(--warning); }
+        .staff-card .label { font-size: 0.65rem; color: #cbd5e1; }
+
+        /* Audit Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1rem; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+
+        .status { padding: 0.25rem 0.5rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 700; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-synced { background: #d1fae5; color: #065f46; }
+
+        .amt-income { color: var(--success); font-weight: 600; }
+        .amt-expense { color: var(--danger); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>✂️ Selwa's Barber Suite</h1>
+    <div id="dateTime" style="font-size: 0.85rem; opacity: 0.8;"></div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="card">
+            <h2>📝 Record Activity</h2>
+            <div class="form-group">
+                <label>Facilitator (Staff Member)</label>
+                <select id="facilitator">
+                    <option value="PRINCE CHANSA">PRINCE CHANSA</option>
+                    <option value="FEWDAYS KALEMBWE">FEWDAYS KALEMBWE</option>
+                    <option value="DAVIES CHIBAWA">DAVIES CHIBAWA</option>
+                    <option value="RUEBEN KALALWA">RUEBEN KALILWA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="desc" placeholder="e.g. Haircut / Shop Cleaning">
+            </div>
+            <div class="form-group">
+                <label>Amount (ZMW)</label>
+                <input type="number" id="amount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="type">
+                    <option value="income">Income (Revenue)</option>
+                    <option value="expense">Expense (Deduction)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select id="method">
+                    <option value="Cash">Cash</option>
+                    <option value="Account">Account/Airtel</option>
+                </select>
+            </div>
+            <button class="btn btn-add" onclick="saveLocally()">Record Activity</button>
+            <button class="btn btn-sync" id="syncBtn" onclick="syncToCloud()">☁️ Sync to Database</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="staff-grid" id="staffStats">
+            </div>
+
+        <div class="card">
+            <h2>📜 Recent Audit Log</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SN</th>
+                            <th>Staff</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLog">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    // Configuration
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzrxA3JZXVsN3GhCAfePdCNu6bidiXH2SAjQaXYsNiHJid6xlvytisP48YM5aTiXre3/exec"; 
+    const STAFF_LIST = ["PRINCE CHANSA", "FEWDAYS KALEMBWE", "DAVIES CHIBAWA", "RUEBEN KALILWA"];
+    
+    let activities = JSON.parse(localStorage.getItem('barber_master_records')) || [];
+
+    // Core Logic
+    function saveLocally() {
+        const staff = document.getElementById('facilitator').value;
+        const desc = document.getElementById('desc').value.trim();
+        const amt = parseFloat(document.getElementById('amount').value);
+        const type = document.getElementById('type').value;
+        const method = document.getElementById('method').value;
+
+        if (!desc || isNaN(amt)) return alert("Please enter valid Description and Amount");
+
+        const entry = {
+            sn: activities.length + 1,
+            date: new Date().toISOString().split('T')[0],
+            timestamp: new Date().toLocaleString(),
+            customer: staff, // Matches 'Facilitator'
+            note: desc,
+            amount: amt,
+            category: type,
+            agent: method,
+            synced: false
+        };
+
+        activities.push(entry);
+        refreshUI();
+        
+        // Clear inputs
+        document.getElementById('desc').value = '';
+        document.getElementById('amount').value = '';
+    }
+
+    function refreshUI() {
+        localStorage.setItem('barber_master_records', JSON.stringify(activities));
+        renderStaffStats();
+        renderAuditLog();
+    }
+
+    function renderStaffStats() {
+        const grid = document.getElementById('staffStats');
+        grid.innerHTML = STAFF_LIST.map(name => {
+            const personalRecords = activities.filter(a => a.customer === name);
+            const income = personalRecords.filter(a => a.category === 'income').reduce((s, a) => s + a.amount, 0);
+            const expense = personalRecords.filter(a => a.category === 'expense').reduce((s, a) => s + a.amount, 0);
+            
+            // Formula: (Income - Expense) * 30%
+            const netWage = (income - expense) * 0.30;
+
+            return `
+                <div class="staff-card">
+                    <h4>${name.split(' ')[0]}</h4>
+                    <div class="wage">K${netWage.toFixed(2)}</div>
+                    <div class="label">30% Net Comm.</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderAuditLog() {
+        const tbody = document.getElementById('auditLog');
+        tbody.innerHTML = activities.slice().reverse().slice(0, 10).map(item => `
+            <tr>
+                <td>#${item.sn}</td>
+                <td><strong>${item.customer.split(' ')[0]}</strong></td>
+                <td>${item.note}</td>
+                <td class="amt-${item.category}">${item.category === 'income' ? '+' : '-'} K${item.amount.toFixed(2)}</td>
+                <td>
+                    <span class="status ${item.synced ? 'status-synced' : 'status-pending'}">
+                        ${item.synced ? 'Synced' : 'Pending'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function syncToCloud() {
+        const pending = activities.filter(a => !a.synced);
+        if (pending.length === 0) return alert("All records are already synced.");
+
+        const btn = document.getElementById('syncBtn');
+        btn.disabled = true;
+        btn.innerText = "⏳ Syncing Multi-Data...";
+
+        try {
+            const response = await fetch(CLOUD_URL, {
+                method: 'POST',
+                body: JSON.stringify(pending)
+            });
+
+            if (response.ok) {
+                activities.forEach(a => a.synced = true);
+                refreshUI();
+                alert("Success! Master Sheet and Individual Staff Books updated.");
+            }
+        } catch (e) {
+            alert("Sync error. Please check your Script URL or Internet.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "☁️ Sync to Master & Staff Sheets";
+        }
+    }
+
+    // Initialize
+    setInterval(() => {
+        document.getElementById('dateTime').innerText = new Date().toLocaleString();
+    }, 1000);
+    
+    window.onload = refreshUI;
+</script>
+
+</body>
+</html>
