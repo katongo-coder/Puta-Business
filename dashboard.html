@@ -141,7 +141,7 @@
                     <option value="PRINCE CHANSA">PRINCE CHANSA</option>
                     <option value="FEWDAYS KALEMBWE">FEWDAYS KALEMBWE</option>
                     <option value="DAVIES CHIBAWA">DAVIES CHIBAWA</option>
-                    <option value="RUEBEN KALALWA">RUEBEN KALILWA</option>
+                    <option value="RUEBEN KALILWA">RUEBEN KALILWA</option>
                 </select>
             </div>
             <div class="form-group">
@@ -295,13 +295,13 @@
             if (response.ok) {
                 activities.forEach(a => a.synced = true);
                 refreshUI();
-                alert("Success! Master Sheet and Individual Staff Books updated.");
+                alert("Success! Database and Individual Staff Books updated.");
             }
         } catch (e) {
             alert("Sync error. Please check your Script URL or Internet.");
         } finally {
             btn.disabled = false;
-            btn.innerText = "☁️ Sync to Master & Staff Sheets";
+            btn.innerText = "☁️ Sync to Database";
         }
     }
 
